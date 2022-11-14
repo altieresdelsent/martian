@@ -17,9 +17,9 @@ package querystring
 import (
 	"encoding/json"
 
-	"github.com/google/martian/v3"
-	"github.com/google/martian/v3/filter"
-	"github.com/google/martian/v3/parse"
+	"github.com/altieres/martian/v3"
+	"github.com/altieres/martian/v3/filter"
+	"github.com/altieres/martian/v3/parse"
 )
 
 var noop = martian.Noop("querystring.Filter")
@@ -54,12 +54,13 @@ func NewFilter(name, value string) *Filter {
 // filterFromJSON takes a JSON message and returns a querystring.Filter.
 //
 // Example JSON:
-// {
-//   "name": "param",
-//   "value": "example",
-//   "scope": ["request", "response"],
-//   "modifier": { ... }
-// }
+//
+//	{
+//	  "name": "param",
+//	  "value": "example",
+//	  "scope": ["request", "response"],
+//	  "modifier": { ... }
+//	}
 func filterFromJSON(b []byte) (*parse.Result, error) {
 	msg := &filterJSON{}
 	if err := json.Unmarshal(b, msg); err != nil {

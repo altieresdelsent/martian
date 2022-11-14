@@ -18,10 +18,10 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/google/martian/v3"
-	"github.com/google/martian/v3/filter"
-	"github.com/google/martian/v3/log"
-	"github.com/google/martian/v3/parse"
+	"github.com/altieres/martian/v3"
+	"github.com/altieres/martian/v3/filter"
+	"github.com/altieres/martian/v3/log"
+	"github.com/altieres/martian/v3/parse"
 )
 
 var noop = martian.Noop("cookie.Filter")
@@ -53,13 +53,14 @@ func NewFilter(cookie *http.Cookie) *filter.Filter {
 // filterFromJSON builds a header.Filter from JSON.
 //
 // Example JSON:
-// {
-//   "scope": ["request", "result"],
-//   "name": "Martian-Testing",
-//   "value": "true",
-//   "modifier": { ... },
-//   "else": { ... }
-// }
+//
+//	{
+//	  "scope": ["request", "result"],
+//	  "name": "Martian-Testing",
+//	  "value": "true",
+//	  "modifier": { ... },
+//	  "else": { ... }
+//	}
 func filterFromJSON(b []byte) (*parse.Result, error) {
 	msg := &filterJSON{}
 	if err := json.Unmarshal(b, msg); err != nil {

@@ -28,8 +28,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/google/martian/v3/log"
-	"github.com/google/martian/v3/parse"
+	"github.com/altieres/martian/v3/log"
+	"github.com/altieres/martian/v3/parse"
 )
 
 func init() {
@@ -63,11 +63,12 @@ func NewModifier(b []byte, contentType string) *Modifier {
 // body.Modifier and an error.
 //
 // Example JSON Configuration message:
-// {
-//   "scope": ["request", "response"],
-//   "contentType": "text/plain",
-//   "body": "c29tZSBkYXRhIHdpdGggACBhbmQg77u/" // Base64 encoded body
-// }
+//
+//	{
+//	  "scope": ["request", "response"],
+//	  "contentType": "text/plain",
+//	  "body": "c29tZSBkYXRhIHdpdGggACBhbmQg77u/" // Base64 encoded body
+//	}
 func modifierFromJSON(b []byte) (*parse.Result, error) {
 	msg := &modifierJSON{}
 	if err := json.Unmarshal(b, msg); err != nil {

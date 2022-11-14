@@ -22,10 +22,10 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/google/martian/v3"
-	"github.com/google/martian/v3/log"
-	"github.com/google/martian/v3/parse"
-	"github.com/google/martian/v3/verify"
+	"github.com/altieres/martian/v3"
+	"github.com/altieres/martian/v3/log"
+	"github.com/altieres/martian/v3/parse"
+	"github.com/altieres/martian/v3/verify"
 )
 
 var noop = martian.Noop("martianhttp.Modifier")

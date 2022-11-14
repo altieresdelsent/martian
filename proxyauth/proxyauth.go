@@ -21,8 +21,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/google/martian/v3"
-	"github.com/google/martian/v3/auth"
+	"github.com/altieres/martian/v3"
+	"github.com/altieres/martian/v3/auth"
 )
 
 var noop = martian.Noop("proxyauth.Modifier")

@@ -33,8 +33,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/google/martian/v3"
-	"github.com/google/martian/v3/parse"
+	"github.com/altieres/martian/v3"
+	"github.com/altieres/martian/v3/parse"
 )
 
 // Modifier is a martian.RequestResponseModifier that routes reqeusts to rootPath

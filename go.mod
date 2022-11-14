@@ -1,17 +1,17 @@
-module github.com/google/martian/v3
+module github.com/altieres/martian/v3
 
-go 1.18
+go 1.19
 
 require (
-	github.com/golang/snappy v0.0.3
-	golang.org/x/net v0.0.0-20190628185345-da137c7871d7
-	google.golang.org/grpc v1.37.0
-	google.golang.org/protobuf v1.26.0
+	github.com/golang/snappy v0.0.4
+	golang.org/x/net v0.1.0
+	google.golang.org/grpc v1.50.1
+	google.golang.org/protobuf v1.28.1
 )
 
 require (
 	github.com/golang/protobuf v1.5.2 // indirect
-	golang.org/x/sys v0.0.0-20190215142949-d0b11bdaac8a // indirect
-	golang.org/x/text v0.3.0 // indirect
-	google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013 // indirect
+	golang.org/x/sys v0.1.0 // indirect
+	golang.org/x/text v0.4.0 // indirect
+	google.golang.org/genproto v0.0.0-20221027153422-115e99e71e1c // indirect
 )
