@@ -57,6 +57,9 @@ type Service struct {
 func (proxy *Service) HasHarLogger() bool {
 	return proxy.harLooger != nil
 }
+func (proxy *Service) ProxyURL() string {
+	return "http://" + proxy.apiTcpListener.Addr().String()
+}
 
 func (proxy *Service) ExportHarLogger() ([]byte, error) {
 	if proxy.HasHarLogger() {
@@ -87,9 +90,7 @@ func (proxy *Service) DefaultValues() {
 	if proxy.Addr == nil || *proxy.Addr == "" {
 		proxy.Addr = pointer.Pointer(":8080")
 	}
-	if proxy.ApiAddr == nil || *proxy.ApiAddr == "" {
-		proxy.ApiAddr = pointer.Pointer(":8181")
-	}
+
 	if proxy.TlsAddr == nil || *proxy.TlsAddr == "" {
 		proxy.TlsAddr = pointer.Pointer(":4443")
 	}
@@ -149,9 +150,11 @@ func (proxy *Service) Start() error {
 		return err
 	}
 
-	proxy.apiTcpListener, err = net.Listen("tcp", *proxy.ApiAddr)
-	if err != nil {
-		return err
+	if proxy.ApiAddr != nil {
+		proxy.apiTcpListener, err = net.Listen("tcp", *proxy.ApiAddr)
+		if err != nil {
+			return err
+		}
 	}
 
 	tr := &http.Transport{
@@ -213,7 +216,7 @@ func (proxy *Service) Start() error {
 
 		// Expose certificate authority.
 		ah := martianhttp.NewAuthorityHandler(x509c)
-		proxy.configure("/authority.cer", ah, proxy.apiHttpServer)
+		proxy.configure("/authority.cer", ah)
 
 		// Start TLS listener for transparent MITM.
 		tl, err := net.Listen("tcp", *proxy.TlsAddr)
@@ -232,7 +235,7 @@ func (proxy *Service) Start() error {
 	topg := fifo.NewGroup()
 
 	// Redirect API traffic to API server.
-	if *proxy.ApiAddr != "" {
+	if proxy.ApiAddr != nil && *proxy.ApiAddr != "" {
 		addrParts := strings.Split(proxy.apiTcpListener.Addr().String(), ":")
 		apip := addrParts[len(addrParts)-1]
 		port, err := strconv.Atoi(apip)
@@ -267,8 +270,8 @@ func (proxy *Service) Start() error {
 		stack.AddRequestModifier(muxf)
 		stack.AddResponseModifier(muxf)
 
-		proxy.configure("/logs", har.NewExportHandler(hl), proxy.apiHttpServer)
-		proxy.configure("/logs/reset", har.NewResetHandler(hl), proxy.apiHttpServer)
+		proxy.configure("/logs", har.NewExportHandler(hl))
+		proxy.configure("/logs/reset", har.NewResetHandler(hl))
 	}
 
 	logger := martianlog.NewLogger()
@@ -291,31 +294,32 @@ func (proxy *Service) Start() error {
 	}
 
 	// Configure modifiers.
-	proxy.configure("/configure", m, proxy.apiHttpServer)
+	proxy.configure("/configure", m)
 
 	// Verify assertions.
 	vh := verify.NewHandler()
 	vh.SetRequestVerifier(m)
 	vh.SetResponseVerifier(m)
-	proxy.configure("/verify", vh, proxy.apiHttpServer)
+	proxy.configure("/verify", vh)
 
 	// Reset verifications.
 	rh := verify.NewResetHandler()
 	rh.SetRequestVerifier(m)
 	rh.SetResponseVerifier(m)
-	proxy.configure("/verify/reset", rh, proxy.apiHttpServer)
+	proxy.configure("/verify/reset", rh)
 
 	if *proxy.TrafficShaping {
 		tsl := trafficshape.NewListener(proxy.proxyTcpListener)
 		tsh := trafficshape.NewHandler(tsl)
-		proxy.configure("/shape-traffic", tsh, proxy.apiHttpServer)
+		proxy.configure("/shape-traffic", tsh)
 
 		proxy.proxyTcpListener = tsl
 	}
 
 	go proxy.internalProxy.Serve(proxy.proxyTcpListener)
-
-	go http.Serve(proxy.apiTcpListener, proxy.apiHttpServer)
+	if proxy.apiTcpListener != nil {
+		go http.Serve(proxy.apiTcpListener, proxy.apiHttpServer)
+	}
 	return nil
 }
 
@@ -334,22 +338,25 @@ func (proxy *Service) Stop() (error, error) {
 }
 
 // configure installs a configuration handler at path.
-func (proxy *Service) configure(pattern string, handler http.Handler, mux *http.ServeMux) {
+func (proxy *Service) configure(pattern string, handler http.Handler) {
+	if proxy.apiTcpListener == nil {
+		return
+	}
 	if *proxy.AllowCORS {
 		handler = cors.NewHandler(handler)
 	}
 
 	// register handler for martian.proxy to be forwarded to
 	// local API server
-	mux.Handle(path.Join(*proxy.Api, pattern), handler)
+	proxy.apiHttpServer.Handle(path.Join(*proxy.Api, pattern), handler)
 
 	// register handler for local API server
 	p := path.Join("localhost"+*proxy.ApiAddr, pattern)
-	mux.Handle(p, handler)
+	proxy.apiHttpServer.Handle(p, handler)
 	pNoDoor := path.Join("localhost", pattern)
-	mux.Handle(pNoDoor, handler)
+	proxy.apiHttpServer.Handle(pNoDoor, handler)
 	pIpv6 := path.Join(":"+*proxy.ApiAddr, pattern)
-	mux.Handle(pIpv6, handler)
+	proxy.apiHttpServer.Handle(pIpv6, handler)
 	pIpv6NoDoor := path.Join("::", pattern)
-	mux.Handle(pIpv6NoDoor, handler)
+	proxy.apiHttpServer.Handle(pIpv6NoDoor, handler)
 }
