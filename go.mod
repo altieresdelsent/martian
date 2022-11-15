@@ -1,4 +1,4 @@
-module github.com/altieres/martian/v3
+module github.com/altieresdelsent/martian/v3
 
 go 1.19
 
