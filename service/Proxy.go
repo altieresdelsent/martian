@@ -21,7 +21,6 @@ import (
 	"github.com/altieresdelsent/martian/v3/trafficshape"
 	"github.com/altieresdelsent/martian/v3/verify"
 	"github.com/altieresdelsent/pointer"
-	"log"
 	"net"
 	"net/http"
 	"net/url"
@@ -137,7 +136,7 @@ func (proxy *Service) DefaultValues() {
 		proxy.Level = pointer.Pointer(1)
 	}
 }
-func (proxy *Service) Start() {
+func (proxy *Service) Start() error {
 
 	flag.Parse()
 	mlog.SetLevel(*proxy.Level)
@@ -147,15 +146,13 @@ func (proxy *Service) Start() {
 
 	proxy.proxyTcpListener, err = net.Listen("tcp", *proxy.Addr)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	proxy.apiTcpListener, err = net.Listen("tcp", *proxy.ApiAddr)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
-
-	log.Printf("martian: starting proxy on %s and api on %s", proxy.proxyTcpListener.Addr().String(), proxy.apiTcpListener.Addr().String())
 
 	tr := &http.Transport{
 		Dial: (&net.Dialer{
@@ -173,7 +170,7 @@ func (proxy *Service) Start() {
 	if *proxy.DsProxyURL != "" {
 		u, err := url.Parse(*proxy.DsProxyURL)
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 		proxy.internalProxy.SetDownstreamProxy(u)
 	}
@@ -187,25 +184,25 @@ func (proxy *Service) Start() {
 		var err error
 		x509c, priv, err = mitm.NewAuthority("martian.proxy", "Martian Authority", 30*24*time.Hour)
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 	} else if *proxy.Cert != "" && *proxy.Key != "" {
 		tlsc, err := tls.LoadX509KeyPair(*proxy.Cert, *proxy.Key)
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 		priv = tlsc.PrivateKey
 
 		x509c, err = x509.ParseCertificate(tlsc.Certificate[0])
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 	}
 
 	if x509c != nil && priv != nil {
 		mc, err := mitm.NewConfig(x509c, priv)
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 
 		mc.SetValidity(*proxy.Validity)
@@ -221,7 +218,7 @@ func (proxy *Service) Start() {
 		// Start TLS listener for transparent MITM.
 		tl, err := net.Listen("tcp", *proxy.TlsAddr)
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 
 		go proxy.internalProxy.Serve(tls.NewListener(tl, mc.TLS()))
@@ -240,7 +237,7 @@ func (proxy *Service) Start() {
 		apip := addrParts[len(addrParts)-1]
 		port, err := strconv.Atoi(apip)
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 		host := strings.Join(addrParts[:len(addrParts)-1], ":")
 
@@ -319,6 +316,7 @@ func (proxy *Service) Start() {
 	go proxy.internalProxy.Serve(proxy.proxyTcpListener)
 
 	go http.Serve(proxy.apiTcpListener, proxy.apiHttpServer)
+	return nil
 }
 
 func (proxy *Service) Stop() (error, error) {
