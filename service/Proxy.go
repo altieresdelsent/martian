@@ -3,8 +3,9 @@ package service
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/json"
+	"errors"
 	"flag"
-	"github.com/TrackStreetPlatform/go-json-mcparsey/Pointer"
 	"github.com/altieresdelsent/martian/v3"
 	mapi "github.com/altieresdelsent/martian/v3/api"
 	"github.com/altieresdelsent/martian/v3/cors"
@@ -19,6 +20,7 @@ import (
 	"github.com/altieresdelsent/martian/v3/servemux"
 	"github.com/altieresdelsent/martian/v3/trafficshape"
 	"github.com/altieresdelsent/martian/v3/verify"
+	"github.com/altieresdelsent/pointer"
 	"log"
 	"net"
 	"net/http"
@@ -50,60 +52,89 @@ type Service struct {
 	internalProxy    *martian.Proxy
 	apiTcpListener   net.Listener
 	apiHttpServer    *http.ServeMux
+	harLooger        *har.Logger
+}
+
+func (proxy *Service) HasHarLogger() bool {
+	return proxy.harLooger != nil
+}
+
+func (proxy *Service) ExportHarLogger() ([]byte, error) {
+	if proxy.HasHarLogger() {
+		har := proxy.harLooger.Export()
+		return json.Marshal(har)
+	}
+	return nil, errors.New("no har logger")
+
+}
+
+func (proxy *Service) ResetHarLogger() error {
+	if proxy.HasHarLogger() {
+		proxy.harLooger.Reset()
+		return nil
+	}
+	return errors.New("no har logger")
+}
+
+func (proxy *Service) ExportAndResetHarLogger() ([]byte, error) {
+	if proxy.HasHarLogger() {
+		har := proxy.harLooger.Export()
+		return json.Marshal(har)
+	}
+	return nil, errors.New("no har logger")
 }
 
 func (proxy *Service) DefaultValues() {
 	if proxy.Addr == nil || *proxy.Addr == "" {
-		proxy.Addr = Pointer.String(":8080")
+		proxy.Addr = pointer.Pointer(":8080")
 	}
 	if proxy.ApiAddr == nil || *proxy.ApiAddr == "" {
-		proxy.ApiAddr = Pointer.String(":8181")
+		proxy.ApiAddr = pointer.Pointer(":8181")
 	}
 	if proxy.TlsAddr == nil || *proxy.TlsAddr == "" {
-		proxy.TlsAddr = Pointer.String(":4443")
+		proxy.TlsAddr = pointer.Pointer(":4443")
 	}
 	if proxy.GenerateCA == nil {
-		proxy.GenerateCA = Pointer.Bool(true)
+		proxy.GenerateCA = pointer.Pointer(true)
 	}
 	if proxy.Cert == nil || *proxy.Cert == "" {
-		proxy.Cert = Pointer.String("")
+		proxy.Cert = pointer.Pointer("")
 	}
 	if proxy.Key == nil || *proxy.Key == "" {
-		proxy.Key = Pointer.String("")
+		proxy.Key = pointer.Pointer("")
 	}
 	if proxy.Organization == nil || *proxy.Organization == "" {
-		proxy.Organization = Pointer.String("Martian Proxy")
+		proxy.Organization = pointer.Pointer("Martian Proxy")
 	}
 	if proxy.Validity == nil || *proxy.Addr == "" {
-		duration := time.Hour
-		proxy.Validity = &duration
+		proxy.Validity = pointer.Pointer(time.Hour)
 	}
 	if proxy.AllowCORS == nil {
-		proxy.AllowCORS = Pointer.Bool(false)
+		proxy.AllowCORS = pointer.Pointer(false)
 	}
 
 	if proxy.HarLogging == nil {
-		proxy.HarLogging = Pointer.Bool(false)
+		proxy.HarLogging = pointer.Pointer(false)
 	}
 
 	if proxy.MarblLogging == nil {
-		proxy.MarblLogging = Pointer.Bool(false)
+		proxy.MarblLogging = pointer.Pointer(false)
 	}
 
 	if proxy.TrafficShaping == nil {
-		proxy.TrafficShaping = Pointer.Bool(false)
+		proxy.TrafficShaping = pointer.Pointer(false)
 	}
 
 	if proxy.SkipTLSVerify == nil {
-		proxy.SkipTLSVerify = Pointer.Bool(false)
+		proxy.SkipTLSVerify = pointer.Pointer(false)
 	}
 
 	if proxy.DsProxyURL == nil {
-		proxy.DsProxyURL = Pointer.String("")
+		proxy.DsProxyURL = pointer.Pointer("")
 	}
 
 	if proxy.Level == nil {
-		proxy.Level = Pointer.Int(1)
+		proxy.Level = pointer.Pointer(1)
 	}
 }
 func (proxy *Service) Start() {
@@ -291,9 +322,16 @@ func (proxy *Service) Start() {
 }
 
 func (proxy *Service) Stop() (error, error) {
-	proxy.internalProxy.Close()
-	errProxy := proxy.proxyTcpListener.Close()
-	errApi := proxy.apiTcpListener.Close()
+	if proxy.internalProxy != nil {
+		proxy.internalProxy.Close()
+	}
+	var errProxy, errApi error
+	if proxy.proxyTcpListener != nil {
+		errProxy = proxy.proxyTcpListener.Close()
+	}
+	if proxy.apiTcpListener != nil {
+		errApi = proxy.apiTcpListener.Close()
+	}
 	return errProxy, errApi
 }
 
