@@ -20,8 +20,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/altieres/martian/v3"
-	"github.com/altieres/martian/v3/log"
+	"github.com/altieresdelsent/martian/v3"
+	"github.com/altieresdelsent/martian/v3/log"
 )
 
 // Forwarder is a request modifier that routes the request to the API server and

@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/altieres/martian/v3/parse"
+	"github.com/altieresdelsent/martian/v3/parse"
 )
 
 func init() {

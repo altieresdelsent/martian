@@ -20,12 +20,12 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/altieres/martian/v3/martiantest"
-	"github.com/altieres/martian/v3/parse"
-	"github.com/altieres/martian/v3/proxyutil"
+	"github.com/altieresdelsent/martian/v3/martiantest"
+	"github.com/altieresdelsent/martian/v3/parse"
+	"github.com/altieresdelsent/martian/v3/proxyutil"
 
 	// Import to register header.Modifier with JSON parser.
-	_ "github.com/altieres/martian/v3/header"
+	_ "github.com/altieresdelsent/martian/v3/header"
 )
 
 func TestPriorityGroupModifyRequest(t *testing.T) {

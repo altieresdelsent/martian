@@ -23,10 +23,10 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/altieres/martian/v3"
-	"github.com/altieres/martian/v3/log"
-	"github.com/altieres/martian/v3/messageview"
-	"github.com/altieres/martian/v3/parse"
+	"github.com/altieresdelsent/martian/v3"
+	"github.com/altieresdelsent/martian/v3/log"
+	"github.com/altieresdelsent/martian/v3/messageview"
+	"github.com/altieresdelsent/martian/v3/parse"
 )
 
 // Logger is a modifier that logs requests and responses.

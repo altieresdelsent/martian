@@ -26,13 +26,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/altieres/martian/v3"
-	"github.com/altieres/martian/v3/h2"
-	"github.com/altieres/martian/v3/mitm"
+	"github.com/altieresdelsent/martian/v3"
+	"github.com/altieresdelsent/martian/v3/h2"
+	"github.com/altieresdelsent/martian/v3/mitm"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
-	tspb "github.com/altieres/martian/v3/h2/testservice"
+	tspb "github.com/altieresdelsent/martian/v3/h2/testservice"
 )
 
 var (

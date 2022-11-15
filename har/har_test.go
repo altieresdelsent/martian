@@ -24,8 +24,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/altieres/martian/v3"
-	"github.com/altieres/martian/v3/proxyutil"
+	"github.com/altieresdelsent/martian/v3"
+	"github.com/altieresdelsent/martian/v3/proxyutil"
 )
 
 func TestModifyRequest(t *testing.T) {

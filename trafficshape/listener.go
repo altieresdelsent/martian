@@ -19,7 +19,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/altieres/martian/v3/log"
+	"github.com/altieresdelsent/martian/v3/log"
 )
 
 // DefaultBitrate represents the bitrate that will be for all url regexs for which a shape

@@ -21,7 +21,7 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/altieres/martian/v3"
+	"github.com/altieresdelsent/martian/v3"
 )
 
 // Filter filters RequestModifiers and ResponseModifiers by auth ID.

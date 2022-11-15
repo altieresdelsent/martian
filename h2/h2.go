@@ -25,7 +25,7 @@ import (
 	"net/url"
 	"sync"
 
-	"github.com/altieres/martian/v3/log"
+	"github.com/altieresdelsent/martian/v3/log"
 	"golang.org/x/net/http2"
 )
 

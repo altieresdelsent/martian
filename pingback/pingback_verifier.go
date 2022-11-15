@@ -22,9 +22,9 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/altieres/martian/v3"
-	"github.com/altieres/martian/v3/parse"
-	"github.com/altieres/martian/v3/verify"
+	"github.com/altieresdelsent/martian/v3"
+	"github.com/altieresdelsent/martian/v3/parse"
+	"github.com/altieresdelsent/martian/v3/verify"
 )
 
 const (

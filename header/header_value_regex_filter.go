@@ -19,8 +19,8 @@ import (
 	"net/http"
 	"regexp"
 
-	"github.com/altieres/martian/v3"
-	"github.com/altieres/martian/v3/parse"
+	"github.com/altieresdelsent/martian/v3"
+	"github.com/altieresdelsent/martian/v3/parse"
 )
 
 // ValueRegexFilter executes resmod and reqmod when the header

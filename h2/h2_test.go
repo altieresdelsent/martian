@@ -24,16 +24,16 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/altieres/martian/v3/h2"
-	mgrpc "github.com/altieres/martian/v3/h2/grpc"
-	ht "github.com/altieres/martian/v3/h2/testing"
+	"github.com/altieresdelsent/martian/v3/h2"
+	mgrpc "github.com/altieresdelsent/martian/v3/h2/grpc"
+	ht "github.com/altieresdelsent/martian/v3/h2/testing"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/hpack"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/encoding/gzip"
 	"google.golang.org/protobuf/proto"
 
-	tspb "github.com/altieres/martian/v3/h2/testservice"
+	tspb "github.com/altieresdelsent/martian/v3/h2/testservice"
 )
 
 type requestProcessor struct {

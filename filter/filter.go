@@ -20,9 +20,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/altieres/martian/v3"
-	"github.com/altieres/martian/v3/log"
-	"github.com/altieres/martian/v3/verify"
+	"github.com/altieresdelsent/martian/v3"
+	"github.com/altieresdelsent/martian/v3/log"
+	"github.com/altieresdelsent/martian/v3/verify"
 )
 
 var noop = martian.Noop("Filter")

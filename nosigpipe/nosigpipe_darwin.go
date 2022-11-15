@@ -7,7 +7,7 @@ import (
 	"net"
 	"syscall"
 
-	"github.com/altieres/martian/v3/log"
+	"github.com/altieresdelsent/martian/v3/log"
 )
 
 // IgnoreSIGPIPE prevents SIGPIPE from being raised on TCP sockets when remote hangs up

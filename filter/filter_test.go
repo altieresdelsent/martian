@@ -19,9 +19,9 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/altieres/martian/v3/martiantest"
-	"github.com/altieres/martian/v3/proxyutil"
-	"github.com/altieres/martian/v3/verify"
+	"github.com/altieresdelsent/martian/v3/martiantest"
+	"github.com/altieresdelsent/martian/v3/proxyutil"
+	"github.com/altieresdelsent/martian/v3/verify"
 )
 
 func TestRequestWhenTrueCondition(t *testing.T) {

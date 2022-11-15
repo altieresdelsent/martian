@@ -25,7 +25,7 @@ import (
 	"net/url"
 	"sync/atomic"
 
-	"github.com/altieres/martian/v3/h2"
+	"github.com/altieresdelsent/martian/v3/h2"
 	"github.com/golang/snappy"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/hpack"

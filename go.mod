@@ -3,6 +3,7 @@ module github.com/altieres/martian/v3
 go 1.19
 
 require (
+	github.com/TrackStreetPlatform/go-json-mcparsey v0.0.0-20220728194510-33ab2a719f66
 	github.com/golang/snappy v0.0.4
 	golang.org/x/net v0.1.0
 	google.golang.org/grpc v1.50.1
