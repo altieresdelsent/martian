@@ -1,9 +1,10 @@
-package proxy
+package service
 
 import (
 	"crypto/tls"
 	"crypto/x509"
 	"flag"
+	"github.com/TrackStreetPlatform/go-json-mcparsey/Pointer"
 	"github.com/altieres/martian/v3"
 	mapi "github.com/altieres/martian/v3/api"
 	"github.com/altieres/martian/v3/cors"
@@ -28,7 +29,7 @@ import (
 	"time"
 )
 
-type ProxyService struct {
+type Service struct {
 	Addr             *string
 	ApiAddr          *string
 	TlsAddr          *string
@@ -51,7 +52,61 @@ type ProxyService struct {
 	apiHttpServer    *http.ServeMux
 }
 
-func (proxy *ProxyService) Start() {
+func (proxy *Service) DefaultValues() {
+	if proxy.Addr == nil || *proxy.Addr == "" {
+		proxy.Addr = Pointer.String(":8080")
+	}
+	if proxy.ApiAddr == nil || *proxy.ApiAddr == "" {
+		proxy.ApiAddr = Pointer.String(":8181")
+	}
+	if proxy.TlsAddr == nil || *proxy.TlsAddr == "" {
+		proxy.TlsAddr = Pointer.String(":4443")
+	}
+	if proxy.GenerateCA == nil {
+		proxy.GenerateCA = Pointer.Bool(true)
+	}
+	if proxy.Cert == nil || *proxy.Cert == "" {
+		proxy.Cert = Pointer.String("")
+	}
+	if proxy.Key == nil || *proxy.Key == "" {
+		proxy.Key = Pointer.String("")
+	}
+	if proxy.Organization == nil || *proxy.Organization == "" {
+		proxy.Organization = Pointer.String("Martian Proxy")
+	}
+	if proxy.Validity == nil || *proxy.Addr == "" {
+		duration := time.Hour
+		proxy.Validity = &duration
+	}
+	if proxy.AllowCORS == nil {
+		proxy.AllowCORS = Pointer.Bool(false)
+	}
+
+	if proxy.HarLogging == nil {
+		proxy.HarLogging = Pointer.Bool(false)
+	}
+
+	if proxy.MarblLogging == nil {
+		proxy.MarblLogging = Pointer.Bool(false)
+	}
+
+	if proxy.TrafficShaping == nil {
+		proxy.TrafficShaping = Pointer.Bool(false)
+	}
+
+	if proxy.SkipTLSVerify == nil {
+		proxy.SkipTLSVerify = Pointer.Bool(false)
+	}
+
+	if proxy.DsProxyURL == nil {
+		proxy.DsProxyURL = Pointer.String("")
+	}
+
+	if proxy.Level == nil {
+		proxy.Level = Pointer.Int(1)
+	}
+}
+func (proxy *Service) Start() {
 
 	flag.Parse()
 	mlog.SetLevel(*proxy.Level)
@@ -235,7 +290,7 @@ func (proxy *ProxyService) Start() {
 	go http.Serve(proxy.apiTcpListener, proxy.apiHttpServer)
 }
 
-func (proxy *ProxyService) Stop() (error, error) {
+func (proxy *Service) Stop() (error, error) {
 	proxy.internalProxy.Close()
 	errProxy := proxy.proxyTcpListener.Close()
 	errApi := proxy.apiTcpListener.Close()
@@ -243,7 +298,7 @@ func (proxy *ProxyService) Stop() (error, error) {
 }
 
 // configure installs a configuration handler at path.
-func (proxy *ProxyService) configure(pattern string, handler http.Handler, mux *http.ServeMux) {
+func (proxy *Service) configure(pattern string, handler http.Handler, mux *http.ServeMux) {
 	if *proxy.AllowCORS {
 		handler = cors.NewHandler(handler)
 	}
