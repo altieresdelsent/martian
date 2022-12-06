@@ -42,3 +42,9 @@ func (nm *noopModifier) ModifyResponse(*http.Response) error {
 	log.Debugf("%s: no response modifier configured", nm.id)
 	return nil
 }
+
+// ModifyResponse logs a debug line.
+func (nm *noopModifier) ModifyRoundTrip(*http.Request) (*http.Response, error) {
+	log.Debugf("%s: no response modifier configured", nm.id)
+	return nil, nil
+}

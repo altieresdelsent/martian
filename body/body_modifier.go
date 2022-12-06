@@ -90,7 +90,7 @@ func (m *Modifier) ModifyRequest(req *http.Request) error {
 	req.Header.Del("Content-Encoding")
 
 	req.ContentLength = int64(len(m.body))
-	req.Body = ioutil.NopCloser(bytes.NewReader(m.body))
+	req.Body = io.NopCloser(bytes.NewReader(m.body))
 
 	return nil
 }

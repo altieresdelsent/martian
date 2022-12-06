@@ -25,6 +25,14 @@ type RequestModifier interface {
 	ModifyRequest(req *http.Request) error
 }
 
+// RoundTripModifier is an interface that defines a round trip modifier, useful when
+// does not want do only modify the response, but make its own response without truly
+// ever sending the request, return a nil response or an error to not skip.
+type RoundTripModifier interface {
+	// ModifyRequest modifies the request.
+	ModifyRoundTrip(req *http.Request) (*http.Response, error)
+}
+
 // ResponseModifier is an interface that defines a response modifier that can
 // be used by a proxy.
 type ResponseModifier interface {
@@ -37,6 +45,7 @@ type ResponseModifier interface {
 type RequestResponseModifier interface {
 	RequestModifier
 	ResponseModifier
+	RoundTripModifier
 }
 
 // RequestModifierFunc is an adapter for using a function with the given

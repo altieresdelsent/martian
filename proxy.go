@@ -62,8 +62,9 @@ type Proxy struct {
 	connsMu      sync.Mutex // protects conns.Add/Wait from concurrent access
 	closing      chan bool
 
-	reqmod RequestModifier
-	resmod ResponseModifier
+	reqmod            RequestModifier
+	resmod            ResponseModifier
+	roundTripModifier RoundTripModifier
 }
 
 // NewProxy returns a new HTTP proxy.
@@ -179,6 +180,15 @@ func (p *Proxy) SetResponseModifier(resmod ResponseModifier) {
 	}
 
 	p.resmod = resmod
+}
+
+// SetResponseModifier sets the response modifier.
+func (p *Proxy) SetRoundTripModifier(roundTripModifier RoundTripModifier) {
+	if roundTripModifier == nil {
+		roundTripModifier = noop
+	}
+
+	p.roundTripModifier = roundTripModifier
 }
 
 // Serve accepts connections from the listener and handles the requests.
@@ -600,6 +610,10 @@ func (p *Proxy) roundTrip(ctx *Context, req *http.Request) (*http.Response, erro
 	if ctx.SkippingRoundTrip() {
 		log.Debugf("martian: skipping round trip")
 		return proxyutil.NewResponse(200, nil, req), nil
+	}
+
+	if response, err := p.roundTripModifier.ModifyRoundTrip(req); response != nil && err == nil {
+		return response, err
 	}
 
 	return p.roundTripper.RoundTrip(req)

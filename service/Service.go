@@ -364,11 +364,16 @@ func (proxy *Service) configure(pattern string, handler http.Handler) {
 }
 
 // SetRequestModifier sets the request modifier.
-func (p *Service) SetRequestModifier(reqmod martian.RequestModifier) {
-	p.internalProxy.SetRequestModifier(reqmod)
+func (proxy *Service) SetRequestModifier(reqmod martian.RequestModifier) {
+	proxy.internalProxy.SetRequestModifier(reqmod)
 }
 
 // SetResponseModifier sets the response modifier.
-func (p *Service) SetResponseModifier(resmod martian.ResponseModifier) {
-	p.internalProxy.SetResponseModifier(resmod)
+func (proxy *Service) SetResponseModifier(resmod martian.ResponseModifier) {
+	proxy.internalProxy.SetResponseModifier(resmod)
+}
+
+// SetResponseModifier sets the response modifier.
+func (proxy *Service) SetRoundTripModifier(roundTripModifier martian.RoundTripModifier) {
+	proxy.internalProxy.SetRoundTripModifier(roundTripModifier)
 }
