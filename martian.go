@@ -56,6 +56,10 @@ type RequestModifierFunc func(req *http.Request) error
 // signature as a ResponseModifier.
 type ResponseModifierFunc func(res *http.Response) error
 
+// ResponseModifierFunc is an adapter for using a function with the given
+// signature as a ResponseModifier.
+type RoundTripModifierFunc func(req *http.Request) (*http.Response, error)
+
 // ModifyRequest modifies the request using the given function.
 func (f RequestModifierFunc) ModifyRequest(req *http.Request) error {
 	return f(req)
@@ -64,4 +68,9 @@ func (f RequestModifierFunc) ModifyRequest(req *http.Request) error {
 // ModifyResponse modifies the response using the given function.
 func (f ResponseModifierFunc) ModifyResponse(res *http.Response) error {
 	return f(res)
+}
+
+// RoundTripModifierFunc modifies the round trip using the given function.
+func (f RoundTripModifierFunc) ModifyRoundTrip(req *http.Request) (*http.Response, error) {
+	return f(req)
 }
