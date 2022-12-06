@@ -159,11 +159,13 @@ func (proxy *Service) Start() error {
 
 	tr := &http.Transport{
 		Dial: (&net.Dialer{
-			Timeout:   30 * time.Second,
-			KeepAlive: 30 * time.Second,
+			Timeout:   200 * time.Second,
+			KeepAlive: 200 * time.Second,
 		}).Dial,
-		TLSHandshakeTimeout:   10 * time.Second,
-		ExpectContinueTimeout: time.Second,
+		TLSHandshakeTimeout:   200 * time.Second,
+		ExpectContinueTimeout: 200 * time.Second,
+		IdleConnTimeout:       200 * time.Second,
+		ResponseHeaderTimeout: 200 * time.Second,
 		TLSClientConfig: &tls.Config{
 			InsecureSkipVerify: *proxy.SkipTLSVerify,
 		},
@@ -359,4 +361,14 @@ func (proxy *Service) configure(pattern string, handler http.Handler) {
 	proxy.apiHttpServer.Handle(pIpv6, handler)
 	pIpv6NoDoor := path.Join("::", pattern)
 	proxy.apiHttpServer.Handle(pIpv6NoDoor, handler)
+}
+
+// SetRequestModifier sets the request modifier.
+func (p *Service) SetRequestModifier(reqmod martian.RequestModifier) {
+	p.internalProxy.SetRequestModifier(reqmod)
+}
+
+// SetResponseModifier sets the response modifier.
+func (p *Service) SetResponseModifier(resmod martian.ResponseModifier) {
+	p.internalProxy.SetResponseModifier(resmod)
 }
