@@ -136,13 +136,13 @@ func (proxy *Service) DefaultValues() {
 	if proxy.Level == nil {
 		proxy.Level = pointer.Pointer(1)
 	}
+	proxy.internalProxy = martian.NewProxy()
 }
 func (proxy *Service) Start() error {
 
 	flag.Parse()
 	mlog.SetLevel(*proxy.Level)
 
-	proxy.internalProxy = martian.NewProxy()
 	var err error
 
 	proxy.proxyTcpListener, err = net.Listen("tcp", *proxy.Addr)
