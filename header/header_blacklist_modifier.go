@@ -58,6 +58,11 @@ func (m *blacklistModifier) ModifyResponse(res *http.Response) error {
 	return nil
 }
 
+// ModifyRoundTrip copies the header in from to the response header for to.
+func (m *blacklistModifier) ModifyRoundTrip(req *http.Request) (*http.Response, error) {
+	return nil, nil
+}
+
 // NewBlacklistModifier returns a modifier that will delete any header that
 // matches a name contained in the names parameter.
 func NewBlacklistModifier(names ...string) martian.RequestResponseModifier {

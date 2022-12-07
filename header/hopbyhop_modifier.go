@@ -60,6 +60,11 @@ func (m *hopByHopModifier) ModifyResponse(res *http.Response) error {
 	return nil
 }
 
+// ModifyRoundTrip copies the header in from to the response header for to.
+func (m *hopByHopModifier) ModifyRoundTrip(req *http.Request) (*http.Response, error) {
+	return nil, nil
+}
+
 func removeHopByHopHeaders(header http.Header) {
 	// Additional hop-by-hop headers may be specified in `Connection` headers.
 	// http://tools.ietf.org/html/draft-ietf-httpbis-p1-messaging-14#section-9.1

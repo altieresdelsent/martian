@@ -54,6 +54,11 @@ func (m *copyModifier) ModifyResponse(res *http.Response) error {
 	return h.Set(m.to, h.Get(m.from))
 }
 
+// ModifyResponse copies the header in from to the response header for to.
+func (m *copyModifier) ModifyRoundTrip(req *http.Request) (*http.Response, error) {
+	return nil, nil
+}
+
 // NewCopyModifier returns a modifier that will copy the header in from to the
 // header in to.
 func NewCopyModifier(from, to string) martian.RequestResponseModifier {

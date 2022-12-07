@@ -47,6 +47,11 @@ func (m *appendModifier) ModifyResponse(res *http.Response) error {
 	return proxyutil.ResponseHeader(res).Add(m.name, m.value)
 }
 
+// ModifyRoundTrip copies the header in from to the response header for to.
+func (m *appendModifier) ModifyRoundTrip(req *http.Request) (*http.Response, error) {
+	return nil, nil
+}
+
 // NewAppendModifier returns an appendModifier that will append a header with
 // with the given name and value for both requests and responses. Existing
 // headers with the same name will be left in place.
