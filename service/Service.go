@@ -49,109 +49,110 @@ type Service struct {
 	Level            *int
 	proxyTcpListener net.Listener
 	internalProxy    *martian.Proxy
+	stack            *fifo.Group
 	apiTcpListener   net.Listener
 	apiHttpServer    *http.ServeMux
 	harLooger        *har.Logger
 }
 
-func (proxy *Service) HasHarLogger() bool {
-	return proxy.harLooger != nil
+func (service *Service) HasHarLogger() bool {
+	return service.harLooger != nil
 }
-func (proxy *Service) ProxyURL() string {
-	return "http://" + proxy.apiTcpListener.Addr().String()
+func (service *Service) ProxyURL() string {
+	return "http://" + service.apiTcpListener.Addr().String()
 }
 
-func (proxy *Service) ExportHarLogger() ([]byte, error) {
-	if proxy.HasHarLogger() {
-		har := proxy.harLooger.Export()
-		return json.Marshal(har)
+func (service *Service) ExportHarLogger() ([]byte, error) {
+	if service.HasHarLogger() {
+		harLog := service.harLooger.Export()
+		return json.Marshal(harLog)
 	}
 	return nil, errors.New("no har logger")
 
 }
 
-func (proxy *Service) ResetHarLogger() error {
-	if proxy.HasHarLogger() {
-		proxy.harLooger.Reset()
+func (service *Service) ResetHarLogger() error {
+	if service.HasHarLogger() {
+		service.harLooger.Reset()
 		return nil
 	}
 	return errors.New("no har logger")
 }
 
-func (proxy *Service) ExportAndResetHarLogger() ([]byte, error) {
-	if proxy.HasHarLogger() {
-		har := proxy.harLooger.Export()
-		return json.Marshal(har)
+func (service *Service) ExportAndResetHarLogger() ([]byte, error) {
+	if service.HasHarLogger() {
+		harLog := service.harLooger.Export()
+		return json.Marshal(harLog)
 	}
 	return nil, errors.New("no har logger")
 }
 
-func (proxy *Service) DefaultValues() {
-	if proxy.Addr == nil || *proxy.Addr == "" {
-		proxy.Addr = pointer.Pointer(":8080")
+func (service *Service) DefaultValues() {
+	if service.Addr == nil || *service.Addr == "" {
+		service.Addr = pointer.Pointer(":8080")
 	}
 
-	if proxy.TlsAddr == nil || *proxy.TlsAddr == "" {
-		proxy.TlsAddr = pointer.Pointer(":4443")
+	if service.TlsAddr == nil || *service.TlsAddr == "" {
+		service.TlsAddr = pointer.Pointer(":4443")
 	}
-	if proxy.GenerateCA == nil {
-		proxy.GenerateCA = pointer.Pointer(true)
+	if service.GenerateCA == nil {
+		service.GenerateCA = pointer.Pointer(true)
 	}
-	if proxy.Cert == nil || *proxy.Cert == "" {
-		proxy.Cert = pointer.Pointer("")
+	if service.Cert == nil || *service.Cert == "" {
+		service.Cert = pointer.Pointer("")
 	}
-	if proxy.Key == nil || *proxy.Key == "" {
-		proxy.Key = pointer.Pointer("")
+	if service.Key == nil || *service.Key == "" {
+		service.Key = pointer.Pointer("")
 	}
-	if proxy.Organization == nil || *proxy.Organization == "" {
-		proxy.Organization = pointer.Pointer("Martian Proxy")
+	if service.Organization == nil || *service.Organization == "" {
+		service.Organization = pointer.Pointer("Martian Proxy")
 	}
-	if proxy.Validity == nil || *proxy.Addr == "" {
-		proxy.Validity = pointer.Pointer(time.Hour)
+	if service.Validity == nil || *service.Addr == "" {
+		service.Validity = pointer.Pointer(time.Hour)
 	}
-	if proxy.AllowCORS == nil {
-		proxy.AllowCORS = pointer.Pointer(false)
-	}
-
-	if proxy.HarLogging == nil {
-		proxy.HarLogging = pointer.Pointer(false)
+	if service.AllowCORS == nil {
+		service.AllowCORS = pointer.Pointer(false)
 	}
 
-	if proxy.MarblLogging == nil {
-		proxy.MarblLogging = pointer.Pointer(false)
+	if service.HarLogging == nil {
+		service.HarLogging = pointer.Pointer(false)
 	}
 
-	if proxy.TrafficShaping == nil {
-		proxy.TrafficShaping = pointer.Pointer(false)
+	if service.MarblLogging == nil {
+		service.MarblLogging = pointer.Pointer(false)
 	}
 
-	if proxy.SkipTLSVerify == nil {
-		proxy.SkipTLSVerify = pointer.Pointer(false)
+	if service.TrafficShaping == nil {
+		service.TrafficShaping = pointer.Pointer(false)
 	}
 
-	if proxy.DsProxyURL == nil {
-		proxy.DsProxyURL = pointer.Pointer("")
+	if service.SkipTLSVerify == nil {
+		service.SkipTLSVerify = pointer.Pointer(false)
 	}
 
-	if proxy.Level == nil {
-		proxy.Level = pointer.Pointer(1)
+	if service.DsProxyURL == nil {
+		service.DsProxyURL = pointer.Pointer("")
 	}
-	proxy.internalProxy = martian.NewProxy()
+
+	if service.Level == nil {
+		service.Level = pointer.Pointer(1)
+	}
+	service.internalProxy = martian.NewProxy()
 }
-func (proxy *Service) Start() error {
+func (service *Service) Start() error {
 
 	flag.Parse()
-	mlog.SetLevel(*proxy.Level)
+	mlog.SetLevel(*service.Level)
 
 	var err error
 
-	proxy.proxyTcpListener, err = net.Listen("tcp", *proxy.Addr)
+	service.proxyTcpListener, err = net.Listen("tcp", *service.Addr)
 	if err != nil {
 		return err
 	}
 
-	if proxy.ApiAddr != nil {
-		proxy.apiTcpListener, err = net.Listen("tcp", *proxy.ApiAddr)
+	if service.ApiAddr != nil {
+		service.apiTcpListener, err = net.Listen("tcp", *service.ApiAddr)
 		if err != nil {
 			return err
 		}
@@ -167,32 +168,32 @@ func (proxy *Service) Start() error {
 		IdleConnTimeout:       200 * time.Second,
 		ResponseHeaderTimeout: 200 * time.Second,
 		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: *proxy.SkipTLSVerify,
+			InsecureSkipVerify: *service.SkipTLSVerify,
 		},
 	}
-	proxy.internalProxy.SetRoundTripper(tr)
+	service.internalProxy.SetRoundTripper(tr)
 
-	if *proxy.DsProxyURL != "" {
-		u, err := url.Parse(*proxy.DsProxyURL)
+	if *service.DsProxyURL != "" {
+		u, err := url.Parse(*service.DsProxyURL)
 		if err != nil {
 			return err
 		}
-		proxy.internalProxy.SetDownstreamProxy(u)
+		service.internalProxy.SetDownstreamProxy(u)
 	}
 
-	proxy.apiHttpServer = http.NewServeMux()
+	service.apiHttpServer = http.NewServeMux()
 
 	var x509c *x509.Certificate
 	var priv interface{}
 
-	if *proxy.GenerateCA {
+	if *service.GenerateCA {
 		var err error
 		x509c, priv, err = mitm.NewAuthority("martian.proxy", "Martian Authority", 30*24*time.Hour)
 		if err != nil {
 			return err
 		}
-	} else if *proxy.Cert != "" && *proxy.Key != "" {
-		tlsc, err := tls.LoadX509KeyPair(*proxy.Cert, *proxy.Key)
+	} else if *service.Cert != "" && *service.Key != "" {
+		tlsc, err := tls.LoadX509KeyPair(*service.Cert, *service.Key)
 		if err != nil {
 			return err
 		}
@@ -210,26 +211,26 @@ func (proxy *Service) Start() error {
 			return err
 		}
 
-		mc.SetValidity(*proxy.Validity)
-		mc.SetOrganization(*proxy.Organization)
-		mc.SkipTLSVerify(*proxy.SkipTLSVerify)
+		mc.SetValidity(*service.Validity)
+		mc.SetOrganization(*service.Organization)
+		mc.SkipTLSVerify(*service.SkipTLSVerify)
 
-		proxy.internalProxy.SetMITM(mc)
+		service.internalProxy.SetMITM(mc)
 
 		// Expose certificate authority.
 		ah := martianhttp.NewAuthorityHandler(x509c)
-		proxy.configure("/authority.cer", ah)
+		service.configure("/authority.cer", ah)
 
 		// Start TLS listener for transparent MITM.
-		tl, err := net.Listen("tcp", *proxy.TlsAddr)
+		tl, err := net.Listen("tcp", *service.TlsAddr)
 		if err != nil {
 			return err
 		}
 
-		go proxy.internalProxy.Serve(tls.NewListener(tl, mc.TLS()))
+		go service.internalProxy.Serve(tls.NewListener(tl, mc.TLS()))
 	}
-
-	stack, fg := httpspec.NewStack("martian")
+	var fg *fifo.Group
+	service.stack, fg = httpspec.NewStack("martian")
 
 	// wrap stack in a group so that we can forward API requests to the API port
 	// before the httpspec modifiers which include the via modifier which will
@@ -237,8 +238,8 @@ func (proxy *Service) Start() error {
 	topg := fifo.NewGroup()
 
 	// Redirect API traffic to API server.
-	if proxy.ApiAddr != nil && *proxy.ApiAddr != "" {
-		addrParts := strings.Split(proxy.apiTcpListener.Addr().String(), ":")
+	if service.ApiAddr != nil && *service.ApiAddr != "" {
+		addrParts := strings.Split(service.apiTcpListener.Addr().String(), ":")
 		apip := addrParts[len(addrParts)-1]
 		port, err := strconv.Atoi(apip)
 		if err != nil {
@@ -247,133 +248,133 @@ func (proxy *Service) Start() error {
 		host := strings.Join(addrParts[:len(addrParts)-1], ":")
 
 		// Forward traffic that pattern matches in http.DefaultServeMux
-		apif := servemux.NewFilter(proxy.apiHttpServer)
+		apif := servemux.NewFilter(service.apiHttpServer)
 		apif.SetRequestModifier(mapi.NewForwarder(host, port))
 		topg.AddRequestModifier(apif)
 	}
-	topg.AddRequestModifier(stack)
-	topg.AddResponseModifier(stack)
+	topg.AddRequestModifier(service.stack)
+	topg.AddResponseModifier(service.stack)
 
-	proxy.internalProxy.SetRequestModifier(topg)
-	proxy.internalProxy.SetResponseModifier(topg)
+	service.internalProxy.SetRequestModifier(topg)
+	service.internalProxy.SetResponseModifier(topg)
 
 	m := martianhttp.NewModifier()
 	fg.AddRequestModifier(m)
 	fg.AddResponseModifier(m)
 
-	if *proxy.HarLogging {
+	if *service.HarLogging {
 		hl := har.NewLogger()
-		muxf := servemux.NewFilter(proxy.apiHttpServer)
+		muxf := servemux.NewFilter(service.apiHttpServer)
 		// Only append to HAR logs when the requests are not API requests,
 		// that is, they are not matched in http.DefaultServeMux
 		muxf.RequestWhenFalse(hl)
 		muxf.ResponseWhenFalse(hl)
 
-		stack.AddRequestModifier(muxf)
-		stack.AddResponseModifier(muxf)
+		service.stack.AddRequestModifier(muxf)
+		service.stack.AddResponseModifier(muxf)
 
-		proxy.configure("/logs", har.NewExportHandler(hl))
-		proxy.configure("/logs/reset", har.NewResetHandler(hl))
+		service.configure("/logs", har.NewExportHandler(hl))
+		service.configure("/logs/reset", har.NewResetHandler(hl))
 	}
 
 	logger := martianlog.NewLogger()
 	logger.SetDecode(true)
 
-	stack.AddRequestModifier(logger)
-	stack.AddResponseModifier(logger)
+	service.stack.AddRequestModifier(logger)
+	service.stack.AddResponseModifier(logger)
 
-	if *proxy.MarblLogging {
+	if *service.MarblLogging {
 		lsh := marbl.NewHandler()
 		lsm := marbl.NewModifier(lsh)
-		muxf := servemux.NewFilter(proxy.apiHttpServer)
+		muxf := servemux.NewFilter(service.apiHttpServer)
 		muxf.RequestWhenFalse(lsm)
 		muxf.ResponseWhenFalse(lsm)
-		stack.AddRequestModifier(muxf)
-		stack.AddResponseModifier(muxf)
+		service.stack.AddRequestModifier(muxf)
+		service.stack.AddResponseModifier(muxf)
 
 		// retrieve binary marbl logs
-		proxy.apiHttpServer.Handle("/binlogs", lsh)
+		service.apiHttpServer.Handle("/binlogs", lsh)
 	}
 
 	// Configure modifiers.
-	proxy.configure("/configure", m)
+	service.configure("/configure", m)
 
 	// Verify assertions.
 	vh := verify.NewHandler()
 	vh.SetRequestVerifier(m)
 	vh.SetResponseVerifier(m)
-	proxy.configure("/verify", vh)
+	service.configure("/verify", vh)
 
 	// Reset verifications.
 	rh := verify.NewResetHandler()
 	rh.SetRequestVerifier(m)
 	rh.SetResponseVerifier(m)
-	proxy.configure("/verify/reset", rh)
+	service.configure("/verify/reset", rh)
 
-	if *proxy.TrafficShaping {
-		tsl := trafficshape.NewListener(proxy.proxyTcpListener)
+	if *service.TrafficShaping {
+		tsl := trafficshape.NewListener(service.proxyTcpListener)
 		tsh := trafficshape.NewHandler(tsl)
-		proxy.configure("/shape-traffic", tsh)
+		service.configure("/shape-traffic", tsh)
 
-		proxy.proxyTcpListener = tsl
+		service.proxyTcpListener = tsl
 	}
 
-	go proxy.internalProxy.Serve(proxy.proxyTcpListener)
-	if proxy.apiTcpListener != nil {
-		go http.Serve(proxy.apiTcpListener, proxy.apiHttpServer)
+	go service.internalProxy.Serve(service.proxyTcpListener)
+	if service.apiTcpListener != nil {
+		go http.Serve(service.apiTcpListener, service.apiHttpServer)
 	}
 	return nil
 }
 
-func (proxy *Service) Stop() (error, error) {
-	if proxy.internalProxy != nil {
-		proxy.internalProxy.Close()
+func (service *Service) Stop() (error, error) {
+	if service.internalProxy != nil {
+		service.internalProxy.Close()
 	}
 	var errProxy, errApi error
-	if proxy.proxyTcpListener != nil {
-		errProxy = proxy.proxyTcpListener.Close()
+	if service.proxyTcpListener != nil {
+		errProxy = service.proxyTcpListener.Close()
 	}
-	if proxy.apiTcpListener != nil {
-		errApi = proxy.apiTcpListener.Close()
+	if service.apiTcpListener != nil {
+		errApi = service.apiTcpListener.Close()
 	}
 	return errProxy, errApi
 }
 
 // configure installs a configuration handler at path.
-func (proxy *Service) configure(pattern string, handler http.Handler) {
-	if proxy.apiTcpListener == nil {
+func (service *Service) configure(pattern string, handler http.Handler) {
+	if service.apiTcpListener == nil {
 		return
 	}
-	if *proxy.AllowCORS {
+	if *service.AllowCORS {
 		handler = cors.NewHandler(handler)
 	}
 
 	// register handler for martian.proxy to be forwarded to
 	// local API server
-	proxy.apiHttpServer.Handle(path.Join(*proxy.Api, pattern), handler)
+	service.apiHttpServer.Handle(path.Join(*service.Api, pattern), handler)
 
 	// register handler for local API server
-	p := path.Join("localhost"+*proxy.ApiAddr, pattern)
-	proxy.apiHttpServer.Handle(p, handler)
+	p := path.Join("localhost"+*service.ApiAddr, pattern)
+	service.apiHttpServer.Handle(p, handler)
 	pNoDoor := path.Join("localhost", pattern)
-	proxy.apiHttpServer.Handle(pNoDoor, handler)
-	pIpv6 := path.Join(":"+*proxy.ApiAddr, pattern)
-	proxy.apiHttpServer.Handle(pIpv6, handler)
+	service.apiHttpServer.Handle(pNoDoor, handler)
+	pIpv6 := path.Join(":"+*service.ApiAddr, pattern)
+	service.apiHttpServer.Handle(pIpv6, handler)
 	pIpv6NoDoor := path.Join("::", pattern)
-	proxy.apiHttpServer.Handle(pIpv6NoDoor, handler)
+	service.apiHttpServer.Handle(pIpv6NoDoor, handler)
 }
 
 // SetRequestModifier sets the request modifier.
-func (proxy *Service) SetRequestModifier(reqmod martian.RequestModifier) {
-	proxy.internalProxy.SetRequestModifier(reqmod)
+func (service *Service) AddRequestModifier(reqmod martian.RequestModifier) {
+	service.stack.AddRequestModifier(reqmod)
 }
 
 // SetResponseModifier sets the response modifier.
-func (proxy *Service) SetResponseModifier(resmod martian.ResponseModifier) {
-	proxy.internalProxy.SetResponseModifier(resmod)
+func (service *Service) AddResponseModifier(resmod martian.ResponseModifier) {
+	service.stack.AddResponseModifier(resmod)
 }
 
 // SetResponseModifier sets the response modifier.
-func (proxy *Service) SetRoundTripModifier(roundTripModifier martian.RoundTripModifier) {
-	proxy.internalProxy.SetRoundTripModifier(roundTripModifier)
+func (service *Service) SetRoundTripModifier(roundTripModifier martian.RoundTripModifier) {
+	service.internalProxy.SetRoundTripModifier(roundTripModifier)
 }
