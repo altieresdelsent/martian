@@ -50,6 +50,7 @@ type Service struct {
 	proxyTcpListener net.Listener
 	internalProxy    *martian.Proxy
 	stack            *fifo.Group
+	fg               *fifo.Group
 	apiTcpListener   net.Listener
 	apiHttpServer    *http.ServeMux
 	harLooger        *har.Logger
@@ -87,7 +88,7 @@ func (service *Service) ExportAndResetHarLogger() ([]byte, error) {
 	return nil, errors.New("no har logger")
 }
 
-func (service *Service) DefaultValues() {
+func (service *Service) Initialize() {
 	if service.Addr == nil || *service.Addr == "" {
 		service.Addr = pointer.Pointer(":8080")
 	}
@@ -138,6 +139,7 @@ func (service *Service) DefaultValues() {
 		service.Level = pointer.Pointer(1)
 	}
 	service.internalProxy = martian.NewProxy()
+	service.stack, service.fg = httpspec.NewStack("martian")
 }
 func (service *Service) Start() error {
 
@@ -229,8 +231,6 @@ func (service *Service) Start() error {
 
 		go service.internalProxy.Serve(tls.NewListener(tl, mc.TLS()))
 	}
-	var fg *fifo.Group
-	service.stack, fg = httpspec.NewStack("martian")
 
 	// wrap stack in a group so that we can forward API requests to the API port
 	// before the httpspec modifiers which include the via modifier which will
@@ -259,8 +259,8 @@ func (service *Service) Start() error {
 	service.internalProxy.SetResponseModifier(topg)
 
 	m := martianhttp.NewModifier()
-	fg.AddRequestModifier(m)
-	fg.AddResponseModifier(m)
+	service.fg.AddRequestModifier(m)
+	service.fg.AddResponseModifier(m)
 
 	if *service.HarLogging {
 		hl := har.NewLogger()
