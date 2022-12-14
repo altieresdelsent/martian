@@ -293,7 +293,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		p.SetDownstreamProxy(u)
+		p.SetDownstreamProxy(http.ProxyURL(u))
 	}
 
 	mux := http.NewServeMux()
@@ -460,4 +460,10 @@ func configure(pattern string, handler http.Handler, mux *http.ServeMux) {
 	// register handler for local API server
 	p := path.Join("localhost"+*apiAddr, pattern)
 	mux.Handle(p, handler)
+	pNoDoor := path.Join("localhost", pattern)
+	mux.Handle(pNoDoor, handler)
+	pIpv6 := path.Join(":"+*apiAddr, pattern)
+	mux.Handle(pIpv6, handler)
+	pIpv6NoDoor := path.Join("::", pattern)
+	mux.Handle(pIpv6NoDoor, handler)
 }

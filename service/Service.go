@@ -45,7 +45,7 @@ type Service struct {
 	MarblLogging     *bool
 	TrafficShaping   *bool
 	SkipTLSVerify    *bool
-	DsProxyURL       *string
+	DsProxyURL       func(*http.Request) (*url.URL, error)
 	Level            *int
 	proxyTcpListener net.Listener
 	internalProxy    *martian.Proxy
@@ -131,14 +131,11 @@ func (service *Service) Initialize() {
 		service.SkipTLSVerify = pointer.Pointer(false)
 	}
 
-	if service.DsProxyURL == nil {
-		service.DsProxyURL = pointer.Pointer("")
-	}
-
 	if service.Level == nil {
 		service.Level = pointer.Pointer(1)
 	}
 	service.internalProxy = martian.NewProxy()
+	service.internalProxy.SetTimeout(100 * time.Second)
 	service.stack, service.fg = httpspec.NewStack("martian")
 }
 func (service *Service) Start() error {
@@ -175,12 +172,8 @@ func (service *Service) Start() error {
 	}
 	service.internalProxy.SetRoundTripper(tr)
 
-	if *service.DsProxyURL != "" {
-		u, err := url.Parse(*service.DsProxyURL)
-		if err != nil {
-			return err
-		}
-		service.internalProxy.SetDownstreamProxy(u)
+	if (*service).DsProxyURL != nil {
+		service.internalProxy.SetDownstreamProxy(service.DsProxyURL)
 	}
 
 	service.apiHttpServer = http.NewServeMux()

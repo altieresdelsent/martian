@@ -57,7 +57,7 @@ type Proxy struct {
 	dial         func(string, string) (net.Conn, error)
 	timeout      time.Duration
 	mitm         *mitm.Config
-	proxyURL     *url.URL
+	downProxy    func(*http.Request) (*url.URL, error)
 	conns        sync.WaitGroup
 	connsMu      sync.Mutex // protects conns.Add/Wait from concurrent access
 	closing      chan bool
@@ -101,18 +101,18 @@ func (p *Proxy) SetRoundTripper(rt http.RoundTripper) {
 
 	if tr, ok := p.roundTripper.(*http.Transport); ok {
 		tr.TLSNextProto = make(map[string]func(string, *tls.Conn) http.RoundTripper)
-		tr.Proxy = http.ProxyURL(p.proxyURL)
+		tr.Proxy = p.downProxy
 		tr.Dial = p.dial
 	}
 }
 
 // SetDownstreamProxy sets the proxy that receives requests from the upstream
 // proxy.
-func (p *Proxy) SetDownstreamProxy(proxyURL *url.URL) {
-	p.proxyURL = proxyURL
+func (p *Proxy) SetDownstreamProxy(downProxy func(*http.Request) (*url.URL, error)) {
+	p.downProxy = downProxy
 
 	if tr, ok := p.roundTripper.(*http.Transport); ok {
-		tr.Proxy = http.ProxyURL(p.proxyURL)
+		tr.Proxy = downProxy
 	}
 }
 
@@ -453,6 +453,7 @@ func (p *Proxy) handle(ctx *Context, conn net.Conn, brw *bufio.ReadWriter) error
 	log.Debugf("martian: waiting for request: %v", conn.RemoteAddr())
 
 	req, err := p.readRequest(ctx, conn, brw)
+
 	if err != nil {
 		return err
 	}
@@ -620,25 +621,28 @@ func (p *Proxy) roundTrip(ctx *Context, req *http.Request) (*http.Response, erro
 }
 
 func (p *Proxy) connect(req *http.Request) (*http.Response, net.Conn, error) {
-	if p.proxyURL != nil {
-		log.Debugf("martian: CONNECT with downstream proxy: %s", p.proxyURL.Host)
-
-		conn, err := p.dial("tcp", p.proxyURL.Host)
+	if p.downProxy != nil {
+		proxyHost, err := p.downProxy(req)
 		if err != nil {
-			return nil, nil, err
+			log.Debugf("martian: CONNECT with downstream proxy: %s", proxyHost.Host)
+
+			conn, err := p.dial("tcp", proxyHost.Host)
+			if err != nil {
+				return nil, nil, err
+			}
+			pbw := bufio.NewWriter(conn)
+			pbr := bufio.NewReader(conn)
+
+			req.Write(pbw)
+			pbw.Flush()
+
+			res, err := http.ReadResponse(pbr, req)
+			if err != nil {
+				return nil, nil, err
+			}
+
+			return res, conn, nil
 		}
-		pbw := bufio.NewWriter(conn)
-		pbr := bufio.NewReader(conn)
-
-		req.Write(pbw)
-		pbw.Flush()
-
-		res, err := http.ReadResponse(pbr, req)
-		if err != nil {
-			return nil, nil, err
-		}
-
-		return res, conn, nil
 	}
 
 	log.Debugf("martian: CONNECT to host directly: %s", req.URL.Host)
