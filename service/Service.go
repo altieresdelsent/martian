@@ -162,6 +162,7 @@ func (service *Service) Start() error {
 			Timeout:   200 * time.Second,
 			KeepAlive: 200 * time.Second,
 		}).Dial,
+		TLSNextProto:          make(map[string]func(string, *tls.Conn) http.RoundTripper),
 		TLSHandshakeTimeout:   200 * time.Second,
 		ExpectContinueTimeout: 200 * time.Second,
 		IdleConnTimeout:       200 * time.Second,
